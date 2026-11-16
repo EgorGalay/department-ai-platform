@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+**/.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+
+# Local configuration and data
+**/.env
+**/.env.local
+!.env.example
+data/
+
+# Frontend
+node_modules/
+.next/
+out/
+coverage/
+
+# Local tools and agent state
+.idea/
+.agents/
+.codex/
