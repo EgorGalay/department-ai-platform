@@ -9,16 +9,20 @@
 
 ## Backend
 
-В PowerShell из корня репозитория:
+В PowerShell из корня репозитория подготовь конфигурацию и запусти PostgreSQL:
 
 ```powershell
 Copy-Item backend/.env.example backend/.env
+docker compose up -d database
 Set-Location backend
 uv sync --dev
+uv run alembic upgrade head
 uv run uvicorn department_ai.main:app --reload
 ```
 
-API: `http://localhost:8000/api/v1/health`. Документация FastAPI: `http://localhost:8000/docs`.
+API: `http://localhost:8000/api/v1/health`. Проверка готовности БД: `http://localhost:8000/api/v1/ready`. Документация FastAPI: `http://localhost:8000/docs`.
+
+`development-only` в примерах конфигурации предназначен только для локального запуска. Для сервера нужно задать собственные секреты через окружение.
 
 ## Frontend
 
