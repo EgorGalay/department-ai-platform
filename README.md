@@ -17,10 +17,13 @@ docker compose up -d database
 Set-Location backend
 uv sync --dev
 uv run alembic upgrade head
+uv run python -m department_ai.modules.identity.bootstrap_admin
 uv run uvicorn department_ai.main:app --reload
 ```
 
 API: `http://localhost:8000/api/v1/health`. Проверка готовности БД: `http://localhost:8000/api/v1/ready`. Документация FastAPI: `http://localhost:8000/docs`.
+
+Команда `bootstrap_admin` интерактивно создаёт первого администратора и не передаёт пароль через shell. Открытой регистрации нет. В разработке используется локальный ключ по умолчанию; для production задайте `ENVIRONMENT=production` и сгенерируйте `JWT_SECRET_KEY` командой `python -c "import secrets; print(secrets.token_hex(32))"`.
 
 `development-only` в примерах конфигурации предназначен только для локального запуска. Для сервера нужно задать собственные секреты через окружение.
 

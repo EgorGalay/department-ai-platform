@@ -10,3 +10,5 @@ uv export --frozen --no-dev --format requirements.txt --no-hashes --no-cache --o
 ```
 
 For a pip-based runtime install from this directory, use `pip install -r requirements.txt`.
+
+After applying migrations, create the first administrator with `uv run python -m department_ai.modules.identity.bootstrap_admin`. The command asks for the password interactively. Public self-registration is not enabled.

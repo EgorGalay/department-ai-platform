@@ -2,11 +2,11 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from department_ai.api.v1.router import api_router
-from department_ai.core.config.settings import Settings
+from department_ai.core.config.settings import Settings, get_settings
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
-    app_settings = settings or Settings()
+    app_settings = settings or get_settings()
     app = FastAPI(title=app_settings.app_name, version=app_settings.app_version)
 
     app.add_middleware(

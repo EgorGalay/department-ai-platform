@@ -12,6 +12,12 @@ anyio==4.16.0
     #   fastapi
     #   starlette
     #   watchfiles
+argon2-cffi==25.1.0
+    # via pwdlib
+argon2-cffi-bindings==26.2.0
+    # via argon2-cffi
+cffi==2.1.1
+    # via argon2-cffi-bindings
 click==8.5.1
     # via uvicorn
 fastapi==0.163.1
@@ -32,6 +38,10 @@ psycopg==3.3.9
     # via department-ai-platform
 psycopg-binary==3.3.9 ; implementation_name != 'pypy'
     # via psycopg
+pwdlib==0.4.2
+    # via department-ai-platform
+pycparser==3.12 ; implementation_name != 'PyPy'
+    # via cffi
 pydantic==2.14.3
     # via
     #   department-ai-platform
@@ -41,11 +51,15 @@ pydantic-core==2.50.4
     # via pydantic
 pydantic-settings==2.16.3
     # via department-ai-platform
+pyjwt==2.15.1
+    # via department-ai-platform
 python-dotenv==1.2.4
     # via
     #   department-ai-platform
     #   pydantic-settings
     #   uvicorn
+python-multipart==0.0.34
+    # via department-ai-platform
 pyyaml==6.0.3
     # via uvicorn
 sqlalchemy==2.1.8
