@@ -184,7 +184,7 @@ a {
 
 .login-card,
 .account-card {
-  width: min(100%, 520px);
+  width: min(100%, 680px);
   margin: 70px auto;
   padding: clamp(26px, 6vw, 42px);
   border: 1px solid var(--line);
@@ -309,6 +309,53 @@ a {
 .empty-state {
   color: var(--muted);
   font-size: 14px;
+}
+
+.members-section {
+  margin-top: 30px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.organization-members + .organization-members {
+  margin-top: 22px;
+}
+
+.organization-members h3 {
+  margin: 0 0 10px;
+  font-size: 14px;
+}
+
+.member-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.member-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.member-list li div {
+  display: grid;
+  gap: 4px;
+}
+
+.member-list li strong {
+  font-size: 14px;
+}
+
+.member-list li div span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 @media (max-width: 720px) {

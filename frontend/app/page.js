@@ -4,11 +4,15 @@ import { useEffect, useState } from "react";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000";
 const TOKEN_KEY = "department-ai-access-token";
+const ROLE_LABELS = { admin: "Администратор", teacher: "Преподаватель", student: "Студент" };
 
 export default function HomePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [profile, setProfile] = useState(null);
+  const [membersByOrganization, setMembersByOrganization] = useState({});
+  const [membersError, setMembersError] = useState("");
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -16,6 +20,44 @@ export default function HomePage() {
     const token = sessionStorage.getItem(TOKEN_KEY);
     if (token) loadProfile(token);
   }, []);
+
+  useEffect(() => {
+    const adminMemberships = profile?.memberships.filter((membership) => membership.role === "admin") ?? [];
+    if (!adminMemberships.length) {
+      setMembersByOrganization({});
+      setMembersError("");
+      return;
+    }
+
+    let isCurrent = true;
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    setIsLoadingMembers(true);
+    setMembersError("");
+
+    Promise.all(
+      adminMemberships.map(async (membership) => {
+        const response = await fetch(
+          `${API_BASE_URL}/api/v1/organizations/${membership.organization_id}/members`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        if (!response.ok) throw new Error("Не удалось загрузить участников организации.");
+        return [membership.organization_id, await response.json()];
+      }),
+    )
+      .then((entries) => {
+        if (isCurrent) setMembersByOrganization(Object.fromEntries(entries));
+      })
+      .catch((requestError) => {
+        if (isCurrent) setMembersError(requestError.message);
+      })
+      .finally(() => {
+        if (isCurrent) setIsLoadingMembers(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [profile]);
 
   async function loadProfile(token) {
     try {
@@ -92,6 +134,31 @@ export default function HomePage() {
             </ul>
           ) : (
             <p className="empty-state">Пока нет членства в организациях.</p>
+          )}
+          {profile.memberships.some((membership) => membership.role === "admin") && (
+            <div className="members-section">
+              <h2>Участники организации</h2>
+              {isLoadingMembers && <p className="empty-state">Загружаем список…</p>}
+              {membersError && <p className="error-message" role="alert">{membersError}</p>}
+              {!isLoadingMembers && !membersError && profile.memberships
+                .filter((membership) => membership.role === "admin")
+                .map((membership) => (
+                  <section className="organization-members" key={membership.organization_id}>
+                    <h3>{membership.organization_name}</h3>
+                    <ul className="member-list">
+                      {(membersByOrganization[membership.organization_id] || []).map((member) => (
+                        <li key={member.user_id}>
+                          <div>
+                            <strong>{member.full_name}</strong>
+                            <span>{member.email}</span>
+                          </div>
+                          <span className="role-label">{ROLE_LABELS[member.role] || member.role}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                ))}
+            </div>
           )}
           <button className="secondary-button" onClick={handleLogout} type="button">
             Выйти
