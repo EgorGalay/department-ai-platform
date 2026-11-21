@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     )
     jwt_secret_key: SecretStr = SecretStr("development-only-change-me-not-for-production")
     access_token_expire_minutes: int = Field(default=30, gt=0)
+    ollama_base_url: str = "http://127.0.0.1:11435"
+    ollama_model: str = "qwen3:8b"
+    ollama_timeout_seconds: int = Field(default=180, gt=0)
 
     @model_validator(mode="after")
     def validate_production_secret(self) -> Self:

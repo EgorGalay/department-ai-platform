@@ -5,6 +5,7 @@ from sqlalchemy import engine_from_config, pool
 
 from department_ai.core.config.settings import Settings
 from department_ai.infrastructure.database.base import Base
+from department_ai.modules.ai_assistant.infrastructure import models as ai_models  # noqa: F401
 from department_ai.modules.identity.infrastructure import models  # noqa: F401
 
 config = context.config
