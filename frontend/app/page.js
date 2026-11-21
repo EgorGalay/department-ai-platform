@@ -13,6 +13,12 @@ export default function HomePage() {
   const [membersByOrganization, setMembersByOrganization] = useState({});
   const [membersError, setMembersError] = useState("");
   const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [activeOrganizationId, setActiveOrganizationId] = useState("");
+  const [conversationId, setConversationId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [draft, setDraft] = useState("");
+  const [chatError, setChatError] = useState("");
+  const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -65,7 +71,9 @@ export default function HomePage() {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok) throw new Error("Сессия завершилась. Войдите снова.");
-      setProfile(await response.json());
+      const nextProfile = await response.json();
+      setProfile(nextProfile);
+      setActiveOrganizationId(nextProfile.memberships[0]?.organization_id || "");
       setError("");
     } catch (requestError) {
       sessionStorage.removeItem(TOKEN_KEY);
@@ -105,6 +113,47 @@ export default function HomePage() {
     sessionStorage.removeItem(TOKEN_KEY);
     setProfile(null);
     setError("");
+  }
+
+  function startNewConversation() {
+    setConversationId(null);
+    setMessages([]);
+    setChatError("");
+  }
+
+  async function sendMessage(event) {
+    event.preventDefault();
+    const message = draft.trim();
+    if (!message || !activeOrganizationId || isSending) return;
+
+    const token = sessionStorage.getItem(TOKEN_KEY);
+    setDraft("");
+    setChatError("");
+    setMessages((current) => [...current, { role: "user", content: message }]);
+    setIsSending(true);
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/ai/chat`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          organization_id: activeOrganizationId,
+          conversation_id: conversationId,
+          message,
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.detail || "Не удалось получить ответ модели.");
+      setConversationId(result.conversation_id);
+      setMessages((current) => [...current, { role: "assistant", content: result.answer }]);
+    } catch (requestError) {
+      setChatError(requestError.message || "Не удалось связаться с backend.");
+    } finally {
+      setIsSending(false);
+    }
   }
 
   return (
@@ -159,6 +208,63 @@ export default function HomePage() {
                   </section>
                 ))}
             </div>
+          )}
+          {profile.memberships.length > 0 && (
+            <section className="chat-panel" aria-label="Чат с AI-помощником">
+              <div className="chat-heading">
+                <div>
+                  <p className="eyebrow">AI-помощник</p>
+                  <h2>Чат</h2>
+                </div>
+                <button className="secondary-button new-chat-button" onClick={startNewConversation} type="button">
+                  Новый чат
+                </button>
+              </div>
+              {profile.memberships.length > 1 && (
+                <label className="organization-select-label" htmlFor="chat-organization">
+                  Организация
+                  <select
+                    id="chat-organization"
+                    onChange={(event) => {
+                      setActiveOrganizationId(event.target.value);
+                      startNewConversation();
+                    }}
+                    value={activeOrganizationId}
+                  >
+                    {profile.memberships.map((membership) => (
+                      <option key={membership.organization_id} value={membership.organization_id}>
+                        {membership.organization_name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <div className="chat-messages" aria-live="polite">
+                {messages.length === 0 && (
+                  <p className="chat-empty">Напиши вопрос, чтобы начать разговор с помощником.</p>
+                )}
+                {messages.map((item, index) => (
+                  <article className={`chat-message ${item.role}`} key={`${index}-${item.role}`}>
+                    <span>{item.role === "user" ? "Вы" : "Qwen"}</span>
+                    <p>{item.content}</p>
+                  </article>
+                ))}
+                {isSending && <p className="chat-empty">Qwen готовит ответ…</p>}
+              </div>
+              {chatError && <p className="error-message" role="alert">{chatError}</p>}
+              <form className="chat-form" onSubmit={sendMessage}>
+                <textarea
+                  aria-label="Сообщение помощнику"
+                  onChange={(event) => setDraft(event.target.value)}
+                  placeholder="Напиши сообщение…"
+                  rows={2}
+                  value={draft}
+                />
+                <button className="primary-button" disabled={isSending || !draft.trim()} type="submit">
+                  {isSending ? "Отправка…" : "Отправить"}
+                </button>
+              </form>
+            </section>
           )}
           <button className="secondary-button" onClick={handleLogout} type="button">
             Выйти

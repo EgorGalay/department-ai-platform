@@ -12,6 +12,7 @@ htmlcov/
 **/.env
 **/.env.local
 !.env.example
+infrastructure/compose/server.env
 data/
 
 # Frontend
